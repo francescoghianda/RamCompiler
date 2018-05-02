@@ -1,0 +1,9 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="Ram Compiler:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/Ram_Compiler_jar</output-path>
+    <root id="archive" name="Ram Compiler.jar">
+      <element id="module-output" name="Ram Compiler" />
+      <element id="extracted-dir" path="/Volumes/Elements/Java Lib/commons-lang3-3.5/commons-lang3-3.5.jar" path-in-jar="/" />
+    </root>
+  </artifact>
+</component>
