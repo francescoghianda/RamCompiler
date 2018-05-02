@@ -138,7 +138,7 @@ public class RamCompiler extends JFrame
         button2 = new JButton();
 
         //======== this ========
-        setVisible(true);
+
         setName("frame");
         setTitle("Simulatore RAM");
         setResizable(false);
@@ -466,6 +466,8 @@ public class RamCompiler extends JFrame
         output = "";
         ram = new RAM();
         compiler = new Compiler(ram, this);
+
+        setVisible(true);
     }
 
 

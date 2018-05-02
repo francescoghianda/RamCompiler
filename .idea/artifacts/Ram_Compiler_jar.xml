@@ -3,7 +3,8 @@
     <output-path>$PROJECT_DIR$/out/artifacts/Ram_Compiler_jar</output-path>
     <root id="archive" name="Ram Compiler.jar">
       <element id="module-output" name="Ram Compiler" />
-      <element id="extracted-dir" path="/Volumes/Elements/Java Lib/commons-lang3-3.5/commons-lang3-3.5.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/../../../../Libs/commons-lang3-3.5/commons-lang3-3.5.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/../../../../Libs/JCodeArea/JCodeArea.jar" path-in-jar="/" />
     </root>
   </artifact>
 </component>
