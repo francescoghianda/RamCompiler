@@ -1,6 +1,8 @@
 package main;
 
 import org.apache.commons.lang3.SystemUtils;
+import JCodeArea.JCodeArea;
+import JCodeArea.Theme;
 
 import javax.swing.*;
 import javax.swing.border.LineBorder;
@@ -24,10 +26,6 @@ public class RamCompiler extends JFrame
     private JButton debugButton;
     private JButton execNextButton;
     private JButton button3;
-    private JScrollPane scrollPane1;
-    private JTextArea textArea1;
-    private JScrollPane scrollPane2;
-    private JTextPane textPane1;
     private JScrollPane scrollPane3;
     private JTable ramTable;
     private JPanel panel2;
@@ -54,6 +52,7 @@ public class RamCompiler extends JFrame
     private JLabel label1;
     private JLabel label4;
     private JButton button2;
+    private JCodeArea codeArea;
 
     private JFileChooser fc;
     private BufferedReader br;
@@ -62,8 +61,6 @@ public class RamCompiler extends JFrame
     private final int MANUAL_INPUT = 0;
     private final int AUTOMATIC_INPUT = 1;
     private final int FILE_INPUT= 2;
-
-    private static boolean running;
 
     private Thread prog;
     private boolean progRunning;
@@ -82,7 +79,7 @@ public class RamCompiler extends JFrame
 
     private boolean isLinux;
 
-    public RamCompiler()
+    private RamCompiler()
     {
         initComponents();
     }
@@ -103,6 +100,7 @@ public class RamCompiler extends JFrame
             e.printStackTrace();
         }
 
+        codeArea = new JCodeArea(Theme.DARK_THEME);
         menuBar1 = new JMenuBar();
         menu1 = new JMenu();
         openMenu = new JMenuItem();
@@ -112,10 +110,6 @@ public class RamCompiler extends JFrame
         debugButton = new JButton();
         execNextButton = new JButton();
         button3 = new JButton();
-        scrollPane1 = new JScrollPane();
-        textArea1 = new JTextArea();
-        scrollPane2 = new JScrollPane();
-        textPane1 = new JTextPane();
         scrollPane3 = new JScrollPane();
         ramTable = new JTable();
         panel2 = new JPanel();
@@ -161,12 +155,12 @@ public class RamCompiler extends JFrame
 
                 //---- openMenu ----
                 openMenu.setText("Apri");
-                openMenu.addActionListener(e -> openMenuActionPerformed(e));
+                openMenu.addActionListener(this::openMenuActionPerformed);
                 menu1.add(openMenu);
 
                 //---- saveMenu ----
                 saveMenu.setText("Salva");
-                saveMenu.addActionListener(e -> saveMenuActionPerformed(e));
+                saveMenu.addActionListener(this::saveMenuActionPerformed);
                 menu1.add(saveMenu);
 
                 //---- menuItem3 ----
@@ -180,7 +174,7 @@ public class RamCompiler extends JFrame
             runButton.setText("Esegui");
             runButton.setIcon(new ImageIcon(getClass().getResource("/res/run.png")));
             runButton.setMaximumSize(new Dimension(96, 27));
-            runButton.addActionListener(e -> runButtonActionPerformed(e));
+            runButton.addActionListener(this::runButtonActionPerformed);
             menuBar1.add(runButton);
 
             //---- debugButton ----
@@ -188,7 +182,7 @@ public class RamCompiler extends JFrame
             debugButton.setIcon(new ImageIcon(getClass().getResource("/res/debug.png")));
             debugButton.setMinimumSize(new Dimension(72, 29));
             debugButton.setMaximumSize(new Dimension(96, 29));
-            debugButton.addActionListener(e -> debugButtonActionPerformed(e));
+            debugButton.addActionListener(this::debugButtonActionPerformed);
             menuBar1.add(debugButton);
 
             //---- execNextButton ----
@@ -196,7 +190,7 @@ public class RamCompiler extends JFrame
             execNextButton.setMinimumSize(new Dimension(72, 29));
             execNextButton.setMaximumSize(new Dimension(96, 29));
             execNextButton.setEnabled(false);
-            execNextButton.addActionListener(e -> execNextButtonActionPerformed(e));
+            execNextButton.addActionListener(this::execNextButtonActionPerformed);
             menuBar1.add(execNextButton);
 
             //---- button3 ----
@@ -204,48 +198,23 @@ public class RamCompiler extends JFrame
             button3.setIcon(new ImageIcon(getClass().getResource("/res/stop.png")));
             button3.setMinimumSize(new Dimension(72, 29));
             button3.setMaximumSize(new Dimension(96, 29));
-            button3.addActionListener(e -> button3ActionPerformed(e));
+            button3.addActionListener(this::button3ActionPerformed);
             menuBar1.add(button3);
         }
         setJMenuBar(menuBar1);
 
-        //======== scrollPane1 ========
+        codeArea.setSize(535, 655);
+        codeArea.setLocation(0, 0);
+        codeArea.addKeyListener(new KeyAdapter()
         {
-            scrollPane1.setBorder(null);
-
-            //---- textArea1 ----
-            textArea1.setBorder(null);
-            textArea1.setFont(new Font("Monospaced", Font.PLAIN, 15));
-            textArea1.addKeyListener(new KeyAdapter()
+            @Override
+            public void keyTyped(KeyEvent e)
             {
-                @Override
-                public void keyTyped(KeyEvent e)
-                {
-                    textArea1KeyTyped(e);
-                }
-            });
-            scrollPane1.setViewportView(textArea1);
-        }
-        contentPane.add(scrollPane1);
-        scrollPane1.setBounds(20, 0, 515, 655);
+                codeAreaKeyTyped(e);
+            }
+        });
 
-        //======== scrollPane2 ========
-        {
-            scrollPane2.setBorder(null);
-            scrollPane2.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-            scrollPane2.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER);
-
-            //---- textPane1 ----
-            textPane1.setBorder(null);
-            textPane1.setBackground(Color.lightGray);
-            textPane1.setFont(new Font("Monospaced", Font.PLAIN, 15));
-            textPane1.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-            textPane1.setEditable(false);
-            textPane1.setAutoscrolls(false);
-            scrollPane2.setViewportView(textPane1);
-        }
-        contentPane.add(scrollPane2);
-        scrollPane2.setBounds(0, 0, 20, 655);
+        contentPane.add(codeArea);
 
         //======== scrollPane3 ========
         {
@@ -366,19 +335,19 @@ public class RamCompiler extends JFrame
                 //---- radioButton1 ----
                 radioButton1.setText("Manuale");
                 radioButton1.setSelected(true);
-                radioButton1.addActionListener(e -> radioButton1ActionPerformed(e));
+                radioButton1.addActionListener(this::radioButton1ActionPerformed);
                 panel3.add(radioButton1);
                 radioButton1.setBounds(new Rectangle(new Point(10, 25), radioButton1.getPreferredSize()));
 
                 //---- radioButton2 ----
                 radioButton2.setText("Automatico");
-                radioButton2.addActionListener(e -> radioButton2ActionPerformed(e));
+                radioButton2.addActionListener(this::radioButton2ActionPerformed);
                 panel3.add(radioButton2);
                 radioButton2.setBounds(new Rectangle(new Point(10, 50), radioButton2.getPreferredSize()));
 
                 //---- radioButton3 ----
                 radioButton3.setText("File");
-                radioButton3.addActionListener(e -> radioButton3ActionPerformed(e));
+                radioButton3.addActionListener(this::radioButton3ActionPerformed);
                 panel3.add(radioButton3);
                 radioButton3.setBounds(new Rectangle(new Point(10, 75), radioButton3.getPreferredSize()));
                 panel3.add(inputFileNameLabel);
@@ -465,7 +434,7 @@ public class RamCompiler extends JFrame
 
         //---- button2 ----
         button2.setText("Clear");
-        button2.addActionListener(e -> button2ActionPerformed(e));
+        button2.addActionListener(this::button2ActionPerformed);
         contentPane.add(button2);
         button2.setBounds(new Rectangle(new Point(910, 10), button2.getPreferredSize()));
 
@@ -560,7 +529,6 @@ public class RamCompiler extends JFrame
 
     private void menuItem3ActionPerformed()
     {
-        running = false;
         System.exit(0);
     }
 
@@ -585,47 +553,43 @@ public class RamCompiler extends JFrame
 
     private void runProgram(boolean debugMode)
     {
-        prog = new Thread(new Runnable() {
-            @Override
-            public void run()
+        prog = new Thread(() -> {
+            lastInstructionLabel.setText("");
+            lastInputLabel.setText("");
+            jumpLabel.setText("");
+            accLabel.setText("");
+            pcLabel.setText("");
+
+            progRunning = true;
+            Status s;
+            ram.reset();
+            compiler.setDebugMode(debugMode);
+
+            if(inputMode == AUTOMATIC_INPUT)
             {
-                lastInstructionLabel.setText("");
-                lastInputLabel.setText("");
-                jumpLabel.setText("");
-                accLabel.setText("");
-                pcLabel.setText("");
-
-                progRunning = true;
-                Status s;
-                ram.reset();
-                compiler.setDebugMode(debugMode);
-
-                if(inputMode == AUTOMATIC_INPUT)
-                {
-                    (inputDialog = new InputDialog(RamCompiler.this, 0, 0, true)).setVisible(true);
-                    inputArray = inputDialog.getInputArray();
-                    inputCount = 0;
-                }
-
-                if(inputMode == FILE_INPUT) try
-                {
-                    inputFileScanner = new Scanner(inputFile);
-                }
-                catch (FileNotFoundException e)
-                {
-                    e.printStackTrace();
-                }
-
-                if((s = compiler.setProgram(textArea1.getText())).getStatus() != 0)
-                {
-                    if(s.getStatus() != -1)JOptionPane.showMessageDialog(RamCompiler.this, s.getMessage(), "Errore alla linea "+(s.getLine()+1), JOptionPane.ERROR_MESSAGE);
-                }
-                else if((s = compiler.run()).getStatus() != 0)
-                {
-                    if(s.getStatus() != -1)JOptionPane.showMessageDialog(RamCompiler.this, s.getMessage(), "Errore alla linea "+(s.getLine()+1), JOptionPane.ERROR_MESSAGE);
-                }
-                progRunning = false;
+                (inputDialog = new InputDialog(RamCompiler.this, 0, 0, true)).setVisible(true);
+                inputArray = inputDialog.getInputArray();
+                inputCount = 0;
             }
+
+            if(inputMode == FILE_INPUT) try
+            {
+                inputFileScanner = new Scanner(inputFile);
+            }
+            catch (FileNotFoundException e)
+            {
+                e.printStackTrace();
+            }
+
+            if((s = compiler.setProgram(codeArea.getText())).getStatus() != 0)
+            {
+                if(s.getStatus() != -1)JOptionPane.showMessageDialog(RamCompiler.this, s.getMessage(), "Errore alla linea "+(s.getLine()+1), JOptionPane.ERROR_MESSAGE);
+            }
+            else if((s = compiler.run()).getStatus() != 0)
+            {
+                if(s.getStatus() != -1)JOptionPane.showMessageDialog(RamCompiler.this, s.getMessage(), "Errore alla linea "+(s.getLine()+1), JOptionPane.ERROR_MESSAGE);
+            }
+            progRunning = false;
         });
 
         prog.start();
@@ -633,23 +597,19 @@ public class RamCompiler extends JFrame
 
     private void runControl()
     {
-        new Thread(new Runnable() {
-            @Override
-            public void run()
+        new Thread(() -> {
+            while(progRunning) try
             {
-                while(progRunning) try
-                {
-                    Thread.sleep(10);
-                }
-                catch (InterruptedException e1)
-                {
-                    e1.printStackTrace();
-                }
-                runButton.setEnabled(true);
-                debugButton.setEnabled(true);
-                execNextButton.setEnabled(false);
-                if(inputMode == FILE_INPUT)inputFileScanner.close();
+                Thread.sleep(10);
             }
+            catch (InterruptedException e1)
+            {
+                e1.printStackTrace();
+            }
+            runButton.setEnabled(true);
+            debugButton.setEnabled(true);
+            execNextButton.setEnabled(false);
+            if(inputMode == FILE_INPUT)inputFileScanner.close();
         }).start();
     }
 
@@ -667,7 +627,7 @@ public class RamCompiler extends JFrame
                     text += line+"\n";
                 }
                 br.close();
-                textArea1.setText(text);
+                codeArea.setText(text);
             }
         }
         catch (IOException e1)
@@ -682,11 +642,11 @@ public class RamCompiler extends JFrame
         {
             if(fc.showSaveDialog(this) == JFileChooser.APPROVE_OPTION)
             {
-                String[] lines = textArea1.getText().split("\n");
+                String[] lines = codeArea.getText().split("\n");
                 bw = new BufferedWriter(new FileWriter(fc.getSelectedFile()));
-                for(int i = 0; i < lines.length; i++)
+                for(String line : lines)
                 {
-                    bw.write(lines[i]+"\n");
+                    bw.write(line + "\n");
                     bw.flush();
                 }
                 bw.close();
@@ -699,7 +659,7 @@ public class RamCompiler extends JFrame
         }
     }
 
-    private void textArea1KeyTyped(KeyEvent e)
+    private void codeAreaKeyTyped(KeyEvent e)
     {
         e.setKeyChar(Character.toUpperCase(e.getKeyChar()));
     }
@@ -783,39 +743,8 @@ public class RamCompiler extends JFrame
         this.jumpLabel.setText(str);
     }
 
-
-    public static final void main(String[] args)
+    public static void main(String[] args)
     {
-        RamCompiler rc = new RamCompiler();
-
-        new Thread(new Runnable()
-        {
-            @Override
-            public void run()
-            {
-                String text;
-                int lines;
-                running = true;
-                while(running)
-                {
-                    try
-                    {
-                        text = "";
-                        lines = rc.textArea1.getLineCount();
-                        for(int i = 0; i < lines; i++)
-                        {
-                            text += String.valueOf((i+1))+"\n";
-                        }
-                        rc.textPane1.setText(text);
-                        rc.scrollPane2.getVerticalScrollBar().setValue(rc.scrollPane1.getVerticalScrollBar().getValue());
-                        Thread.sleep(25);
-                    }
-                    catch (InterruptedException e)
-                    {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        }).run();
+        new RamCompiler();
     }
 }
